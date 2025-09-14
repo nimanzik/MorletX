@@ -1,0 +1,23 @@
+lint.select = ["B", "E", "F", "I", "Q", "D", "W505", "TCH", "RUF022"]
+lint.ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107"]
+line-length = 88
+
+[format]
+quote-style = "double"
+
+[lint.pycodestyle]
+max-doc-length = 79
+max-line-length = 88
+
+[lint.pydocstyle]
+convention = "numpy"
+
+[lint.flake8-quotes]
+docstring-quotes = "double"
+inline-quotes = "double"
+multiline-quotes = "double"
+
+[lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["pydantic.BaseModel", "sqlmodel.SQLModel"]
+runtime-evaluated-decorators = ["pydantic.validate_call", "pydantic.dataclasses.dataclass"]
+quote-annotations = false

@@ -17,6 +17,9 @@ dependencies = [
 plotly = [
     "plotly>=6.3.0",
 ]
+marimo = [
+    "marimo>=0.15.5",
+]
 
 [build-system]
 requires = ["uv_build>=0.8.5,<0.9.0"]

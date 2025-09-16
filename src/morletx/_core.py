@@ -199,7 +199,7 @@ class MorletWaveletGroup:
         demean: bool = True,
         tukey_alpha: float | None = 0.1,
         mode: Literal["power", "magnitude", "complex"] = "power",
-        move_to_host: bool = False,
+        detach_from_device: bool = False,
     ) -> NDArray:
         """Compute the wavelet transform of the input signal(s).
 
@@ -218,7 +218,7 @@ class MorletWaveletGroup:
                 - `'power'`: squared magnitude of the coefficients.
                 - `'magnitude'`: absolute magnitude of the coefficients.
                 - `'complex'`: complex-valued coefficients.
-        move_to_host : bool, default=False
+        detach_from_device : bool, default=False
             Whether to detach the arrays from the device and move them to the
             host memory (applicable only if the array engine is CuPy).
 
@@ -262,12 +262,15 @@ class MorletWaveletGroup:
             wt_coeffs = xp.abs(wt_coeffs)
         # If 'mode=complex', do nothing. The coefficients are already complex.
 
-        if move_to_host and xp.__name__ == "cupy":
+        if detach_from_device and xp.__name__ == "cupy":
             return xp.asnumpy(wt_coeffs)
         return wt_coeffs
 
     def magnitude_responses(
-        self, normalize: bool = True, move_to_host: bool = False
+        self,
+        normalize: bool = True,
+        detach_from_device: bool = False,
+        n_fft: int | None = None,
     ) -> tuple[NDArray, NDArray]:
         """Return the frequency responses of the wavelets.
 
@@ -278,6 +281,10 @@ class MorletWaveletGroup:
         detach_from_device : bool, default=False
             Whether to detach the arrays from the device and move them to the
             host memory (applicable only if the array engine is CuPy).
+        n_fft : int or None, default=None
+            Number of FFT points to use for computing the frequency responses.
+            If None, the next power of two greater than or equal to `n_t`
+            will be used.
 
         Returns
         -------
@@ -287,7 +294,13 @@ class MorletWaveletGroup:
             Frequency responses of the wavelets.
         """
         xp = self._fetch_array_module()
-        rfreqs = xp.fft.rfftfreq(n=self.n_t, d=self.delta_t)
+
+        if n_fft is None:
+            n_fft = int(2 ** math.ceil(math.log2(self.n_t)))
+
+        n_fft = max(n_fft, self.n_t)
+
+        rfreqs = xp.fft.rfftfreq(n=n_fft, d=self.delta_t)
         phase_diffs = 2.0 * PI * (rfreqs - self.center_freqs[:, None])
         resps = xp.exp(
             -1.0 * xp.square(self.time_widths[:, None] * phase_diffs) / (16.0 * Ln2)
@@ -296,7 +309,7 @@ class MorletWaveletGroup:
         if not normalize:
             resps *= self.spectral_max_amps[:, None]
 
-        if move_to_host and xp.__name__ == "cupy":
+        if detach_from_device and xp.__name__ == "cupy":
             return xp.asnumpy(rfreqs), xp.asnumpy(resps)
         return rfreqs, resps
 
@@ -304,6 +317,7 @@ class MorletWaveletGroup:
         self,
         ax: MplAxes,
         normalize: bool = True,
+        n_fft: int | None = None,
         auto_xlabel: bool = True,
         auto_ylabel: bool = True,
         auto_title: bool = True,
@@ -316,6 +330,10 @@ class MorletWaveletGroup:
             The Matplotlib axes to plot the frequency responses.
         normalize : bool, default=True
             Whether to plot the normalized responses.
+        n_fft : int or None, default=None
+            Number of FFT points to use for computing the frequency responses.
+            If None, the next power of two greater than or equal to `n_t`
+            will be used.
         auto_xlabel : bool, default=True
             Whether to automatically set the x-axis label.
         auto_ylabel : bool, default=True
@@ -328,7 +346,9 @@ class MorletWaveletGroup:
         ax : Axes
             Matplotlib axes displaying the frequency responses.
         """
-        freqs, resps = self.magnitude_responses(normalize=normalize, move_to_host=True)
+        freqs, resps = self.magnitude_responses(
+            normalize=normalize, detach_from_device=True, n_fft=n_fft
+        )
 
         for resp in resps:
             ax.plot(freqs, resp)
@@ -345,6 +365,7 @@ class MorletWaveletGroup:
         self,
         fig: PlotlyFigure,
         normalize: bool = True,
+        n_fft: int | None = None,
         auto_xlabel: bool = True,
         auto_ylabel: bool = True,
         auto_title: bool = True,
@@ -357,6 +378,10 @@ class MorletWaveletGroup:
             The Plotly figure to plot the frequency responses.
         normalize : bool, default=True
             Whether to plot the normalized responses.
+        n_fft : int or None, default=None
+            Number of FFT points to use for computing the frequency responses.
+            If None, the next power of two greater than or equal to `n_t`
+            will be used.
         auto_xlabel : bool, default=True
             Whether to automatically set the x-axis label.
         auto_ylabel : bool, default=True
@@ -371,7 +396,9 @@ class MorletWaveletGroup:
         """
         from plotly import graph_objects as go
 
-        freqs, resps = self.magnitude_responses(normalize=normalize, move_to_host=True)
+        freqs, resps = self.magnitude_responses(
+            normalize=normalize, detach_from_device=True, n_fft=n_fft
+        )
 
         for resp in resps:
             fig.add_trace(go.Scatter(x=freqs, y=resp, showlegend=False))
@@ -484,7 +511,7 @@ class MorletWavelet(MorletWaveletGroup):
         demean: bool = True,
         tukey_alpha: float | None = 0.05,
         mode: Literal["power", "magnitude", "complex"] = "power",
-        move_to_host: bool = False,
+        detach_from_device: bool = False,
     ) -> NDArray:
         """Compute the wavelet transform of the input signal.
 
@@ -503,7 +530,7 @@ class MorletWavelet(MorletWaveletGroup):
                 - `'power'`: squared magnitude of the coefficients.
                 - `'magnitude'`: magnitude of the coefficients.
                 - `'complex'`: complex-valued coefficients.
-        move_to_host : bool, default=False
+        detach_from_device : bool, default=False
             Whether to detach the arrays from the device and move them to the
             host memory (applicable only if the array engine is CuPy).
 
@@ -512,17 +539,23 @@ class MorletWavelet(MorletWaveletGroup):
         coeffs : ndarray of shape (..., n_times)
             Wavelet-transform coefficients, with the same shape as `data`.
         """
-        x_trans = super().transform(data, demean, tukey_alpha, mode, move_to_host)
+        x_trans = super().transform(data, demean, tukey_alpha, mode, detach_from_device)
         axis = x_trans.ndim - 2
         return x_trans.squeeze(axis=axis)
 
-    def magnitude_response(self, normalize: bool = True) -> tuple[NDArray, NDArray]:
+    def magnitude_response(
+        self, normalize: bool = True, n_fft: int | None = None
+    ) -> tuple[NDArray, NDArray]:
         """Return the frequency response of the wavelet.
 
         Parameters
         ----------
         normalize : bool, default=True
             Whether to return the normalized response.
+        n_fft : int or None, default=None
+            Number of FFT points to use for computing the frequency responses.
+            If None, the next power of two greater than or equal to `n_t`
+            will be used.
 
         Returns
         -------
@@ -531,7 +564,7 @@ class MorletWavelet(MorletWaveletGroup):
         resp : ndarray of shape (n_freqs,)
             Frequency response of the wavelet.
         """
-        freqs, resps = self.magnitude_responses(normalize)
+        freqs, resps = self.magnitude_responses(normalize, n_fft=n_fft)
         return freqs, resps.squeeze(axis=0)
 
     def __repr__(self) -> str:
@@ -623,6 +656,7 @@ class MorletFilterBank(MorletWaveletGroup):
         self,
         ax: MplAxes,
         normalize: bool = True,
+        n_fft: int | None = None,
         auto_xlabel: bool = True,
         auto_ylabel: bool = True,
         auto_title: bool = True,
@@ -634,6 +668,10 @@ class MorletFilterBank(MorletWaveletGroup):
         ----------
         normalize : bool, default=True
             Whether to plot the normalized responses.
+        n_fft : int or None, default=None
+            Number of FFT points to use for computing the frequency responses.
+            If None, the next power of two greater than or equal to `n_t`
+            will be used.
         auto_xlabel : bool, default=True
             Whether to automatically set the x-axis label.
         auto_ylabel : bool, default=True
@@ -649,7 +687,9 @@ class MorletFilterBank(MorletWaveletGroup):
             Matplotlib axes displaying the frequency responses.
         """
         ax = super().plot_responses(
+            ax=ax,
             normalize=normalize,
+            n_fft=n_fft,
             auto_xlabel=auto_xlabel,
             auto_ylabel=auto_ylabel,
             auto_title=auto_title,
@@ -663,6 +703,7 @@ class MorletFilterBank(MorletWaveletGroup):
 
     def plot_responses_plotly(
         self,
+        fig: PlotlyFigure,
         normalize: bool = True,
         auto_xlabel: bool = True,
         auto_ylabel: bool = True,
@@ -689,6 +730,7 @@ class MorletFilterBank(MorletWaveletGroup):
         fig: PlotlyFigure
         """
         fig = super().plot_responses_plotly(
+            fig=fig,
             normalize=normalize,
             auto_xlabel=auto_xlabel,
             auto_ylabel=auto_ylabel,
@@ -762,7 +804,9 @@ class MorletFilterBank(MorletWaveletGroup):
                     )
                 coeffs = s
             case (np.ndarray() as d, None):
-                coeffs = self.transform(d, demean, tukey_alpha, mode, move_to_host=True)
+                coeffs = self.transform(
+                    d, demean, tukey_alpha, mode, detach_from_device=True
+                )
             case _:  # This should never happen
                 raise RuntimeError("Unexpected error in input arguments.")
 

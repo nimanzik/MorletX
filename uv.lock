@@ -463,9 +463,13 @@ dependencies = [
     { name = "cupy-cuda11x" },
     { name = "matplotlib" },
     { name = "numpy" },
-    { name = "plotly" },
     { name = "rich" },
     { name = "scipy" },
+]
+
+[package.optional-dependencies]
+plotly = [
+    { name = "plotly" },
 ]
 
 [package.dev-dependencies]
@@ -483,10 +487,11 @@ requires-dist = [
     { name = "cupy-cuda11x", specifier = ">=13.6.0" },
     { name = "matplotlib", specifier = ">=3.10.6" },
     { name = "numpy", specifier = ">=2.3.3" },
-    { name = "plotly", specifier = ">=6.3.0" },
+    { name = "plotly", marker = "extra == 'plotly'", specifier = ">=6.3.0" },
     { name = "rich", specifier = ">=14.1.0" },
     { name = "scipy", specifier = ">=1.16.2" },
 ]
+provides-extras = ["plotly"]
 
 [package.metadata.requires-dev]
 dev = [

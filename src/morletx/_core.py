@@ -12,17 +12,15 @@ from .utils.fft_utils import _cwt_via_fft
 if TYPE_CHECKING:
     from matplotlib.axes import Axes as MplAxes
     from matplotlib.colors import Colormap
-    from matplotlib.figure import Figure as MplFigure
-    from matplotlib.figure import SubFigure as MplSubFigure
     from numpy.typing import ArrayLike, NDArray
-    from plotly.graph_objs import Figure as PlotlyFigure
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 Ln2 = math.log(2.0)
 PI = math.pi
 
 
 class MorletWaveletGroup:
-    """Base class for single and multi-scale complex Morlet-wavelets."""
+    """Base class for single and multi-scale complex Morlet wavelets."""
 
     def __init__(
         self,
@@ -75,7 +73,7 @@ class MorletWaveletGroup:
         self._check_shape_ratios()
 
     def _fetch_array_module(self) -> Any:
-        """Return the array module for computations."""
+        """Return the array module to be used for computations."""
         return get_array_module(self.array_engine)
 
     def _check_center_freqs(self) -> None:
@@ -123,22 +121,22 @@ class MorletWaveletGroup:
 
     @property
     def nyquist_freq(self) -> float:
-        """Nyquist frequency."""
+        """Nyquist frequency of the wavelets."""
         return 0.5 * self.sampling_freq
 
     @property
     def delta_t(self) -> float:
-        """Sampling interval."""
+        """Sampling interval of the wavelets."""
         return 1.0 / self.sampling_freq
 
     @property
     def n_t(self) -> int:
-        """Number of time points."""
+        """Number of time samples of the wavelets."""
         return int(round(self.duration * self.sampling_freq)) + 1
 
     @property
     def times(self) -> NDArray:
-        """Time points."""
+        """Time samples of the wavelets."""
         xp = self._fetch_array_module()
         return xp.arange(self.n_t) * self.delta_t - 0.5 * self.duration
 
@@ -258,13 +256,11 @@ class MorletWaveletGroup:
         wt_coeffs = _cwt_via_fft(data, self.waveforms, True, self.array_engine)
         wt_coeffs /= xp.sqrt(self.scales[:, None])  # Normalize by the scales
 
-        mode_operations = {
-            "power": lambda inp: xp.square(xp.abs(inp)),
-            "magnitude": xp.abs,
-            "complex": lambda inp: inp,
-        }
-
-        wt_coeffs = mode_operations[mode](wt_coeffs)
+        if mode == "power":
+            wt_coeffs = xp.square(xp.abs(wt_coeffs))
+        elif mode == "magnitude":
+            wt_coeffs = xp.abs(wt_coeffs)
+        # If 'mode=complex', do nothing. The coefficients are already complex.
 
         if move_to_host and xp.__name__ == "cupy":
             return xp.asnumpy(wt_coeffs)
@@ -304,13 +300,69 @@ class MorletWaveletGroup:
             return xp.asnumpy(rfreqs), xp.asnumpy(resps)
         return rfreqs, resps
 
-    def plot_responses_plotly(self, normalize: bool = True) -> PlotlyFigure:
+    def plot_responses(
+        self,
+        ax: MplAxes,
+        normalize: bool = True,
+        auto_xlabel: bool = True,
+        auto_ylabel: bool = True,
+        auto_title: bool = True,
+    ) -> MplAxes:
+        """Plot the frequency responses of the wavelets using Matplotlib.
+
+        Parameters
+        ----------
+        ax : Axes
+            The Matplotlib axes to plot the frequency responses.
+        normalize : bool, default=True
+            Whether to plot the normalized responses.
+        auto_xlabel : bool, default=True
+            Whether to automatically set the x-axis label.
+        auto_ylabel : bool, default=True
+            Whether to automatically set the y-axis label.
+        auto_title : bool, default=True
+            Whether to automatically set the title.
+
+        Returns
+        -------
+        ax : Axes
+            Matplotlib axes displaying the frequency responses.
+        """
+        freqs, resps = self.magnitude_responses(normalize=normalize, move_to_host=True)
+
+        for resp in resps:
+            ax.plot(freqs, resp)
+
+        if auto_xlabel:
+            ax.set_xlabel("Frequency [Hz]")
+        if auto_ylabel:
+            ax.set_ylabel("Magnitude, normalized" if normalize else "Magnitude")
+        if auto_title:
+            ax.set_title("Wavelets Frequency Responses")
+        return ax
+
+    def plot_responses_plotly(
+        self,
+        fig: PlotlyFigure,
+        normalize: bool = True,
+        auto_xlabel: bool = True,
+        auto_ylabel: bool = True,
+        auto_title: bool = True,
+    ) -> PlotlyFigure:
         """Plot the frequency responses of the wavelets using Plotly.
 
         Parameters
         ----------
+        fig : PlotlyFigure
+            The Plotly figure to plot the frequency responses.
         normalize : bool, default=True
             Whether to plot the normalized responses.
+        auto_xlabel : bool, default=True
+            Whether to automatically set the x-axis label.
+        auto_ylabel : bool, default=True
+            Whether to automatically set the y-axis label.
+        auto_title : bool, default=True
+            Whether to automatically set the title.
 
         Returns
         -------
@@ -321,97 +373,18 @@ class MorletWaveletGroup:
 
         freqs, resps = self.magnitude_responses(normalize=normalize, move_to_host=True)
 
-        fig = go.Figure()
         for resp in resps:
             fig.add_trace(go.Scatter(x=freqs, y=resp, showlegend=False))
 
-        fig.update_xaxes(title_text="Frequency [Hz]")
-        fig.update_yaxes(
-            title_text="Magnitude, normalized" if normalize else "Magnitude"
-        )
-
+        if auto_xlabel:
+            fig.update_xaxes(title_text="Frequency [Hz]")
+        if auto_ylabel:
+            fig.update_yaxes(
+                title_text="Magnitude, normalized" if normalize else "Magnitude"
+            )
+        if auto_title:
+            fig.update_layout(title="Wavelets Frequency Responses")
         return fig
-
-    def plot_responses_mpl(self, normalize: bool = True) -> MplFigure:
-        """Plot the frequency responses of the wavelets using Matplotlib.
-
-        Parameters
-        ----------
-        normalize : bool, default=True
-            Whether to plot the normalized responses.
-
-        Returns
-        -------
-        fig : MplFigure
-            Matplotlib figure displaying the frequency responses.
-        """
-        import matplotlib.pyplot as plt
-
-        freqs, resps = self.magnitude_responses(normalize=normalize, move_to_host=True)
-
-        fig, ax = plt.subplots()
-        for resp in resps:
-            ax.plot(freqs, resp)
-
-        ax.set(
-            xlabel="Frequency [Hz]",
-            ylabel="Magnitude, normalized" if normalize else "Magnitude",
-        )
-        fig.set_layout_engine("tight")
-        return fig
-
-    def plot_scalogram_mpl(
-        self,
-        data: ArrayLike,
-        demean: bool = True,
-        tukey_alpha: float | None = 0.1,
-        mode: Literal["power", "magnitude"] = "power",
-        log_scale: bool = False,
-        cmap: str | Colormap | None = None,
-        ax: MplAxes | None = None,
-    ) -> MplFigure | MplSubFigure | None:
-        """Plot the scalogram of the input signal(s).
-
-        Parameters
-        ----------
-        data : ndarray of shape (..., n_times)
-            Input signal(s) to be analyzed.
-        demean : bool, default=True
-            Whether to demean the input signal(s) before computing the wavelet
-            transform.
-        tukey_alpha : float or None, default=0.1
-            Alpha parameter for the Tukey window. If None, no windowing is
-            applied.
-        mode : {'power', 'magnitude', 'complex'}, default='power'
-            Specifies the type of the returned values:
-                - `'power'`: squared magnitude of the coefficients.
-                - `'magnitude'`: absolute magnitude of the coefficients.
-                - `'complex'`: complex-valued coefficients.
-        log_scale : bool, default=False
-            Whether to plot the scalogram in decibel (dB) scale.
-        cmap : str or Colormap or None, default=None
-            The colormap to use for the scalogram.
-        ax : Axes or None, default=None
-            The Matplotlib axes to plot the scalogram. If None, a new figure
-            will be created.
-
-        Returns
-        -------
-        fig : MplFigure
-            Matplotlib figure displaying the scalogram.
-        """
-        from .plotting import plot_tf_plane_mpl
-
-        coeffs = self.transform(data, demean, tukey_alpha, mode, move_to_host=True)
-        return plot_tf_plane_mpl(
-            freqs=self._center_freqs_numpy,
-            times=np.arange(coeffs.shape[-1]) * self.delta_t,
-            xgram=coeffs,
-            label=mode,
-            log_scale=log_scale,
-            cmap=cmap,
-            ax=ax,
-        )
 
 
 class MorletWavelet(MorletWaveletGroup):
@@ -646,8 +619,55 @@ class MorletFilterBank(MorletWaveletGroup):
             f" K={self.shape_ratio}, Fs={self.sampling_freq:.6f}, T={self.duration})"
         )
 
+    def plot_responses(
+        self,
+        ax: MplAxes,
+        normalize: bool = True,
+        auto_xlabel: bool = True,
+        auto_ylabel: bool = True,
+        auto_title: bool = True,
+        show_octaves: bool = False,
+    ) -> MplAxes:
+        """Plot the frequency responses of the wavelets using Matplotlib.
+
+        Parameters
+        ----------
+        normalize : bool, default=True
+            Whether to plot the normalized responses.
+        auto_xlabel : bool, default=True
+            Whether to automatically set the x-axis label.
+        auto_ylabel : bool, default=True
+            Whether to automatically set the y-axis label.
+        auto_title : bool, default=True
+            Whether to automatically set the title.
+        show_octaves : bool, default=True
+            Whether to add vertical lines at the octave frequencies.
+
+        Returns
+        -------
+        ax : Axes
+            Matplotlib axes displaying the frequency responses.
+        """
+        ax = super().plot_responses(
+            normalize=normalize,
+            auto_xlabel=auto_xlabel,
+            auto_ylabel=auto_ylabel,
+            auto_title=auto_title,
+        )
+
+        if show_octaves:
+            for j in range(self.n_octaves + 1):
+                ax.axvline(self.nyquist_freq / 2**j, ls="--", lw=1.0, c="dimgray")
+
+        return ax
+
     def plot_responses_plotly(
-        self, normalize: bool = True, show_octaves: bool = True
+        self,
+        normalize: bool = True,
+        auto_xlabel: bool = True,
+        auto_ylabel: bool = True,
+        auto_title: bool = True,
+        show_octaves: bool = False,
     ) -> PlotlyFigure:
         """Plot the frequency responses of the wavelets using Plotly.
 
@@ -655,44 +675,106 @@ class MorletFilterBank(MorletWaveletGroup):
         ----------
         normalize : bool, default=True
             Whether to plot the normalized responses.
-        show_octaves : bool, default=True
+        auto_xlabel : bool, default=True
+            Whether to automatically set the x-axis label.
+        auto_ylabel : bool, default=True
+            Whether to automatically set the y-axis label.
+        auto_title : bool, default=True
+            Whether to automatically set the title.
+        show_octaves : bool, default=False
             Whether to add vertical lines at the octave frequencies.
 
         Returns
         -------
         fig: PlotlyFigure
         """
-        fig = super().plot_responses_plotly(normalize=normalize)
+        fig = super().plot_responses_plotly(
+            normalize=normalize,
+            auto_xlabel=auto_xlabel,
+            auto_ylabel=auto_ylabel,
+            auto_title=auto_title,
+        )
 
         if show_octaves:
             for j in range(self.n_octaves + 1):
                 fig.add_vline(
                     self.nyquist_freq / 2**j,
-                    line={"dash": "dash", "width": 1.5, "color": "dimgray"},
+                    line={"dash": "dash", "width": 1.0, "color": "dimgray"},
                 )
 
         return fig
 
-    def plot_responses_mpl(
-        self, normalize: bool = True, show_octaves: bool = True
-    ) -> MplFigure:
-        """Plot the frequency responses of the wavelets using Matplotlib.
+    def plot_scalogram(
+        self,
+        ax: MplAxes,
+        data: ArrayLike | None = None,
+        scalogram: NDArray | None = None,
+        demean: bool = True,
+        tukey_alpha: float | None = 0.1,
+        mode: Literal["power", "magnitude"] = "power",
+        log_scale: bool = False,
+        cmap: str | Colormap | None = None,
+    ) -> MplAxes:
+        """Plot the scalogram of the input signal(s).
 
         Parameters
         ----------
-        normalize : bool, default=True
-            Whether to plot the normalized responses.
-        show_octaves : bool, default=True
-            Whether to add vertical lines at the octave frequencies.
+        data : ndarray of shape (..., n_times)
+            Input signal(s) to be analyzed.
+        demean : bool, default=True
+            Whether to demean the input signal(s) before computing the wavelet
+            transform.
+        tukey_alpha : float or None, default=0.1
+            Alpha parameter for the Tukey window. If None, no windowing is
+            applied.
+        mode : {'power', 'magnitude', 'complex'}, default='power'
+            Specifies the type of the returned values:
+                - `'power'`: squared magnitude of the coefficients.
+                - `'magnitude'`: absolute magnitude of the coefficients.
+                - `'complex'`: complex-valued coefficients.
+        log_scale : bool, default=False
+            Whether to plot the scalogram in decibel (dB) scale.
+        cmap : str or Colormap or None, default=None
+            The colormap to use for the scalogram.
+        ax : Axes or None, default=None
+            The Matplotlib axes to plot the scalogram. If None, a new figure
+            will be created.
+
+        Returns
+        -------
+        ax : MplAxes
+            Matplotlib axes displaying the scalogram.
         """
-        fig = super().plot_responses_mpl(normalize=normalize)
+        from ._plotting import plot_tf_plane
 
-        if show_octaves:
-            ax = fig.get_axes()[0]
-            for j in range(self.n_octaves + 1):
-                ax.axvline(self.nyquist_freq / 2**j, ls="--", lw=1.5, c="dimgray")
+        match (data, scalogram):
+            case (None, None):
+                raise ValueError("Either `data` or `scalogram` must be provided.")
+            case (np.ndarray() as d, np.ndarray() as s):
+                raise ValueError(
+                    "Only one of `data` or `scalogram` should be provided."
+                )
+            case (None, np.ndarray() as s):
+                if s.ndim != 2:
+                    raise ValueError(
+                        f"`scalogram` must be a 2D array, but got an array with "
+                        f"shape {s.shape}."
+                    )
+                coeffs = s
+            case (np.ndarray() as d, None):
+                coeffs = self.transform(d, demean, tukey_alpha, mode, move_to_host=True)
+            case _:  # This should never happen
+                raise RuntimeError("Unexpected error in input arguments.")
 
-        return fig
+        return plot_tf_plane(
+            ax=ax,
+            freqs=self._center_freqs_numpy,
+            times=np.arange(coeffs.shape[-1]) * self.delta_t,
+            xgram=coeffs,
+            label=mode,
+            log_scale=log_scale,
+            cmap=cmap,
+        )
 
 
 def compute_morlet_center_freqs(

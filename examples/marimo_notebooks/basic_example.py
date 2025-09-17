@@ -7,6 +7,7 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
@@ -48,6 +49,7 @@ def _(dataclass, np):
 
         def __repr__(self):
             return f"Signal duration: {self.duration} s | num. of samples: {self.num_samples} | sampling frequency: {self.fs}"
+
     return (Signal,)
 
 
@@ -56,7 +58,9 @@ def _(Path, Signal, np):
     npz_file = Path(__file__).parents[1] / "data" / "fin_whale_song.npz"
     npz_data = np.load(npz_file)
 
-    signal = Signal(times=npz_data["times"], values=npz_data["values"], fs=npz_data["fs"])
+    signal = Signal(
+        times=npz_data["times"], values=npz_data["values"], fs=npz_data["fs"]
+    )
 
     print(signal)
     return (signal,)
@@ -95,7 +99,7 @@ def _(MorletFilterBank, signal):
         shape_ratio=5.0,
         duration=1.0,
         sampling_freq=signal.fs,
-        array_engine='numpy',
+        array_engine="numpy",
     )
 
     mode = "magnitude"

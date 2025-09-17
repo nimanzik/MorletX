@@ -9,9 +9,16 @@ dependencies = [
     "cupy-cuda11x>=13.6.0",
     "matplotlib>=3.10.6",
     "numpy>=2.3.3",
-    "plotly>=6.3.0",
     "rich>=14.1.0",
     "scipy>=1.16.2",
+]
+
+[project.optional-dependencies]
+plotly = [
+    "plotly>=6.3.0",
+]
+marimo = [
+    "marimo>=0.15.5",
 ]
 
 [build-system]

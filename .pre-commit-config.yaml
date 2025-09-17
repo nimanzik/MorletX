@@ -11,11 +11,13 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
         types:
           - python
+        exclude: ^(tests/|examples/)
 
       # Run ruff formatter.
       - id: ruff-format
         types:
           - python
+        exclude: ^(tests/|examples/)
 
   # Basic file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks

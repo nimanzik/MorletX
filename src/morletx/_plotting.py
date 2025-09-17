@@ -4,28 +4,32 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.figure import Figure as MplFigure
+from cmcrameri import cm
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes as MplAxes
     from matplotlib.colors import Colormap
-    from matplotlib.figure import SubFigure as MplSubFigure
     from numpy.typing import NDArray
 
 
-def plot_tf_plane_mpl(
+def plot_tf_plane(
+    ax: MplAxes,
     freqs: NDArray,
     times: NDArray,
     xgram: NDArray,
     label: str,
     log_scale: bool = False,
     cmap: str | Colormap | None = None,
-    ax: MplAxes | None = None,
-) -> MplFigure | MplSubFigure | None:
+    auto_xlabel: bool = True,
+    auto_ylabel: bool = True,
+    auto_cbar: bool = True,
+) -> MplAxes:
     """Plot the time-frequency (TF) plane.
 
     Parameters
     ----------
+    ax : Axes or None, default=None
+        The Matplotlib axes to plot the TF plane.
     freqs : ndarray
         The array of sample frequencies.
     times : ndarray
@@ -39,24 +43,21 @@ def plot_tf_plane_mpl(
         Whether to plot the TF plane in decibel (dB) scale.
     cmap : str or Colormap or None, default=None
         The colormap to use for the TF plane.
-    ax : Axes or None, default=None
-        The Matplotlib axes to plot the TF plane. If None, a new figure will be
-        created.
 
     Returns
     -------
-    fig : matplotlib.figure.Figure
-        The Matplotlib figure displaying the TF plane.
+    ax : MplAxes
+        Matplotlib axes displaying the TF plane.
     """
     if xgram.ndim != 2:
         raise ValueError(
-            f"`xgram` must be a 2D array, but got an array with shape {xgram.shape}."
+            f"Time-frequency representation input must be 2D, but got {xgram.ndim}D."
         )
 
     if freqs.shape + times.shape != xgram.shape:
         raise ValueError(
-            f"The shapes of `freqs`, `times`, and `xgram` do not match: "
-            f"{freqs.shape} + {times.shape} != {xgram.shape}."
+            f"The shapes of `freqs`, `times`, and input time-frequency representation "
+            f"do not match: {freqs.shape} + {times.shape} != {xgram.shape}."
         )
 
     # Downsample the frequency dimension if it is too large
@@ -67,16 +68,14 @@ def plot_tf_plane_mpl(
         xgram = _to_decibel(xgram)
 
     # Get the min and max values for the colorbar
-    v_min, v_max = _get_vmin_vmax(xgram)
+    v_min, v_max = _get_vrange(xgram)
+    cmap = cmap or cm.lipari
 
-    if ax is None:
-        _, ax = plt.subplots(1, 1, figsize=(10, 6))
-
-    if xgram.shape[-1] > 2000:
+    if xgram.shape[-1] > 1000:
         # Use `imshow` for large data
         im = ax.imshow(
             xgram,
-            cmap=cmap or _get_default_cmap(),
+            cmap=cmap,
             aspect="auto",
             origin="lower",
             extent=(times[0], times[-1], 0, len(freqs) - 1),
@@ -84,7 +83,7 @@ def plot_tf_plane_mpl(
             vmax=v_max,
         )
         cbar = plt.colorbar(im, ax=ax)
-        y_ticks = np.linspace(0, len(freqs) - 1, num=10, dtype=int)
+        y_ticks = np.linspace(0, len(freqs) - 1, num=8, dtype=int)
         y_tick_labels = [f"{freqs[i]:.0f}" for i in y_ticks]
         ax.set_yticks(ticks=y_ticks, labels=y_tick_labels)
     else:
@@ -93,28 +92,23 @@ def plot_tf_plane_mpl(
             times,
             freqs,
             xgram,
-            cmap=cmap or _get_default_cmap(),
+            cmap=cmap,
             shading="gouraud",
             vmin=v_min,
             vmax=v_max,
         )
         cbar = plt.colorbar(pc, ax=ax)
 
-    # Set axis labels
-    ax.set(xlabel="Time", ylabel="Frequency")
+    if auto_xlabel:
+        ax.set_xlabel("Time")
+    if auto_ylabel:
+        ax.set_ylabel("Frequency")
 
-    # Set colorbar label
-    clabel = label.upper() if label == "psd" else label.capitalize()
-    cbar.set_label(f"{clabel} (dB)" if log_scale else clabel)
+    if auto_cbar:
+        clabel = label.upper() if label == "psd" else label.capitalize()
+        cbar.set_label(f"{clabel} (dB)" if log_scale else clabel)
 
-    fig = ax.get_figure()
-    if fig is None:
-        return None
-
-    if isinstance(fig, MplFigure):
-        fig.set_layout_engine("tight")
-
-    return fig
+    return ax
 
 
 def _downsample_plan(n_original: int, n_max: int) -> tuple[int, int]:
@@ -139,24 +133,13 @@ def _downsample_fdim(freqs: NDArray, xgram: NDArray) -> tuple[NDArray, NDArray]:
     )
 
 
-def _to_decibel(a: NDArray, tiny: float = 1e-12) -> NDArray:
+def _to_decibel(a: NDArray, tiny: float = 1e-10) -> NDArray:
     return 10 * np.log10(np.fmax(a, tiny))
 
 
-def _get_vmin_vmax(xgram: NDArray) -> tuple[float, float]:
+def _get_vrange(xgram: NDArray) -> tuple[float, float]:
     mu = xgram.mean()
     sigma = xgram.std(ddof=1)
     v_min = max(mu - 3 * sigma, xgram.min())
     v_max = min(mu + 3 * sigma, xgram.max())
     return v_min, v_max
-
-
-def _get_default_cmap() -> str | Colormap:
-    try:
-        from cmcrameri import cm
-
-        default_cmap = cm.lipari
-    except ImportError:
-        default_cmap = "inferno"
-
-    return default_cmap

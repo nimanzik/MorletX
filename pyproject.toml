@@ -2,7 +2,12 @@
 name = "morletx"
 version = "0.1.0"
 description = ""
+authors = [
+    { name = "Nima Nooshiri", email = "nima.nooshiri@gmail.com" }
+]
 readme = "README.md"
+license = 'MIT'
+license-files = ['LICENSE']
 requires-python = ">=3.12"
 dependencies = [
     "cmcrameri>=1.9",

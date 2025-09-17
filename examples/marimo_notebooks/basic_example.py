@@ -7,7 +7,6 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
-
     return (mo,)
 
 
@@ -49,7 +48,6 @@ def _(dataclass, np):
 
         def __repr__(self):
             return f"Signal duration: {self.duration} s | num. of samples: {self.num_samples} | sampling frequency: {self.fs}"
-
     return (Signal,)
 
 
@@ -73,7 +71,7 @@ def _(mo):
 
 
 @app.cell
-def _(mo, plt, signal):
+def _(plt, signal):
     fig_sig, ax_sig = plt.subplots(figsize=(10, 6))
     ax_sig.plot(signal.times, signal.values)
     ax_sig.set(
@@ -81,7 +79,8 @@ def _(mo, plt, signal):
         ylabel="Acoustic Amplitude",
         title="Fin-Whale song recording | Bandpass filtered 12–30 Hz",
     )
-    mo.mpl.interactive(fig_sig)
+    # mo.mpl.interactive(fig_sig)
+    plt.gca()
     return
 
 
@@ -116,7 +115,7 @@ def _(mo):
 
 
 @app.cell
-def _(filt_bank, mo, mode, plt, scalogram):
+def _(filt_bank, mode, plt, scalogram):
     fig_sgram, ax_sgram = plt.subplots(figsize=(10, 6))
     filt_bank.plot_scalogram(
         ax=ax_sgram,
@@ -125,7 +124,8 @@ def _(filt_bank, mo, mode, plt, scalogram):
     )
 
     ax_sgram.grid(False)
-    mo.mpl.interactive(fig_sgram)
+    # mo.mpl.interactive(fig_sgram)
+    plt.gca()
     return
 
 
@@ -136,10 +136,16 @@ def _(mo):
 
 
 @app.cell
-def _(filt_bank, mo, plt):
+def _(filt_bank, plt):
     fig_resps, ax_resps = plt.subplots(figsize=(10, 6))
     filt_bank.plot_responses(ax_resps, n_fft=512)
-    mo.mpl.interactive(fig_resps)
+    # mo.mpl.interactive(fig_resps)
+    plt.gca()
+    return
+
+
+@app.cell
+def _():
     return
 
 

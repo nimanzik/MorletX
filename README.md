@@ -151,14 +151,14 @@ Here is an example of the computed scalogram for a signal with a sampling freque
 
 ## Shape Ratio ($\kappa$)
 
-A significant innovation introduced by Morlet is the **shape ratio**, $\kappa$. This parameter defines the Gaussian time width at half-amplitude as an integer multiple of the wavelet's dominant period ($\Delta t = \kappa \, \Tau$). This allows for the preservation of the wavelet's shape as its dominant period changes, providing a consistent analysis across frequencies.
+A significant innovation introduced by Morlet is the **shape ratio**, $\kappa$. This parameter defines the Gaussian time width at half-amplitude as an integer multiple of the wavelet's dominant period ($\Delta t = \kappa T_0$). This allows for the preservation of the wavelet's shape as its dominant period changes, providing a consistent analysis across frequencies.
 
 ❗ This section will be expanded and detailed in the future.
 
 ## Examples
 
 <!-- markdownlint-disable-next-line MD033 -->
-[This example](https://nimanzik.github.io/MorletX/assets/htmls/basic_example.html){:target="_blank"} shows how to use `MorletX` to compute the wavelet transform of an acoustic Fin-Whale signal. The [marimo notebook](examples/marimo_notebooks/basic_example.py) for this example is also available for interactive exploration.
+<a href="https://nimanzik.github.io/MorletX/assets/htmls/basic_example.html" target="_blank">This example</a> shows how to use `MorletX` to compute the wavelet transform of an acoustic Fin-Whale signal. The [marimo notebook](examples/marimo_notebooks/basic_example.py) for this example is also available for interactive exploration.
 
 ## Troubleshooting
 

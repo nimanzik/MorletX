@@ -135,15 +135,15 @@ Here is an example of the computed scalogram for a signal with a sampling freque
 <tr>
 <td align="center">
 <strong>Example Signal</strong><br>
-<img src="assets/images/01_example_signal.png" alt="Example Signal" width="100%">
+<img src="docs/assets/images/01_example_signal.png" alt="Example Signal" width="100%">
 </td>
 <td align="center">
 <strong>Morlet Filter Bank</strong><br>
-<img src="assets/images/02_filter_bank.png" alt="Morlet Filter Bank" width="100%">
+<img src="docs/assets/images/02_filter_bank.png" alt="Morlet Filter Bank" width="100%">
 </td>
 <td align="center">
 <strong>Computed scalogram</strong><br>
-<img src="assets/images/03_scalogram.png" alt="Computed scalogram" width="100%">
+<img src="docs/assets/images/03_scalogram.png" alt="Computed scalogram" width="100%">
 </td>
 </tr>
 </table>
@@ -158,7 +158,7 @@ A significant innovation introduced by Morlet is the **shape ratio**, $\kappa$. 
 ## Examples
 
 <!-- markdownlint-disable-next-line MD033 -->
-<a href="assets/htmls/basic_example.html" target="_blank">This example</a> shows how to use `MorletX` to compute the wavelet transform of an acoustic Fin-Whale signal. The [marimo notebook](examples/marimo_notebooks/basic_example.py) for this example is also available for interactive exploration.
+[This example](https://nimanzik.github.io/MorletX/assets/htmls/basic_example.html){:target="_blank"} shows how to use `MorletX` to compute the wavelet transform of an acoustic Fin-Whale signal. The [marimo notebook](examples/marimo_notebooks/basic_example.py) for this example is also available for interactive exploration.
 
 ## Troubleshooting
 

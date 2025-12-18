@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import torch
 
 from .array_utils_torch import get_centered_array
-
-if TYPE_CHECKING:
-    pass
 
 
 def next_fast_len(target: int, real: bool = True) -> int:
@@ -28,6 +23,7 @@ def next_fast_len(target: int, real: bool = True) -> int:
     # For PyTorch, powers of 2 are generally fast
     # This is a simple implementation; scipy's version is more sophisticated
     import math
+
     return 2 ** math.ceil(math.log2(target))
 
 
@@ -79,7 +75,7 @@ def _cwt_via_fft(
     data_fft = fft_(data, n=n_fft)
     # Add dimension for wavelets: (..., 1, n_fft)
     data_fft = data_fft.unsqueeze(-2)
-    
+
     # Multiply and inverse FFT
     coeffs = ifft_(kernels * data_fft, n=n_fft)[..., :n_conv]
 

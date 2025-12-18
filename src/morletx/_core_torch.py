@@ -67,22 +67,22 @@ class MorletWaveletGroup:
           | milliseconds | kHz             |
           | microseconds | MHz             |
         """
-        self.device = device if device is not None else torch.device('cpu')
+        self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
-        
+
         # Convert inputs to tensors
         if isinstance(center_freqs, (int, float)):
             center_freqs = [center_freqs]
         if isinstance(shape_ratios, (int, float)):
             shape_ratios = [shape_ratios]
-            
+
         self._center_freqs = torch.atleast_1d(
             torch.as_tensor(center_freqs, dtype=dtype, device=self.device)
         )
         self._shape_ratios = torch.atleast_1d(
             torch.as_tensor(shape_ratios, dtype=dtype, device=self.device)
         )
-        
+
         self.duration = duration
         self.sampling_freq = sampling_freq
         self._check_center_freqs()
@@ -149,7 +149,10 @@ class MorletWaveletGroup:
     @property
     def times(self) -> torch.Tensor:
         """Time samples of the wavelets."""
-        return torch.arange(self.n_t, dtype=self.dtype, device=self.device) * self.delta_t - 0.5 * self.duration
+        return (
+            torch.arange(self.n_t, dtype=self.dtype, device=self.device) * self.delta_t
+            - 0.5 * self.duration
+        )
 
     @property
     def time_widths(self) -> torch.Tensor:
@@ -196,11 +199,11 @@ class MorletWaveletGroup:
         """
         # Compute Gaussian envelope
         time_ratio = self.times / self.time_widths[:, None]
-        gaussian = torch.exp(-4.0 * Ln2 * time_ratio ** 2)
-        
+        gaussian = torch.exp(-4.0 * Ln2 * time_ratio**2)
+
         # Compute oscillation
         oscillation = torch.exp(1j * 2.0 * PI * self.center_freqs[:, None] * self.times)
-        
+
         return gaussian * oscillation
 
     @property
@@ -269,7 +272,9 @@ class MorletWaveletGroup:
             data = data * window
 
         wt_coeffs = _cwt_via_fft(data, self.waveforms, hermitian=True)
-        wt_coeffs = wt_coeffs / torch.sqrt(self.scales[:, None])  # Normalize by the scales
+        wt_coeffs = wt_coeffs / torch.sqrt(
+            self.scales[:, None]
+        )  # Normalize by the scales
 
         if mode == "power":
             wt_coeffs = torch.square(torch.abs(wt_coeffs))
@@ -308,8 +313,10 @@ class MorletWaveletGroup:
         n_fft = max(n_fft, self.n_t)
 
         # Compute frequency points
-        rfreqs = torch.fft.rfftfreq(n=n_fft, d=self.delta_t, device=self.device, dtype=self.dtype)
-        
+        rfreqs = torch.fft.rfftfreq(
+            n=n_fft, d=self.delta_t, device=self.device, dtype=self.dtype
+        )
+
         # Compute responses
         phase_diffs = 2.0 * PI * (rfreqs - self.center_freqs[:, None])
         resps = torch.exp(
@@ -355,7 +362,7 @@ class MorletWaveletGroup:
             Matplotlib axes displaying the frequency responses.
         """
         freqs, resps = self.magnitude_responses(normalize=normalize, n_fft=n_fft)
-        
+
         # Convert to numpy for plotting
         freqs_np = freqs.cpu().numpy()
         resps_np = resps.cpu().numpy()
@@ -407,7 +414,7 @@ class MorletWaveletGroup:
         from plotly import graph_objects as go
 
         freqs, resps = self.magnitude_responses(normalize=normalize, n_fft=n_fft)
-        
+
         # Convert to numpy for plotting
         freqs_np = freqs.cpu().numpy()
         resps_np = resps.cpu().numpy()
@@ -828,9 +835,7 @@ class MorletFilterBank(MorletWaveletGroup):
                         f"shape {coeffs.shape}."
                     )
             case (d, None) if d is not None:
-                coeffs_tensor = self.transform(
-                    d, demean, tukey_alpha, mode
-                )
+                coeffs_tensor = self.transform(d, demean, tukey_alpha, mode)
                 coeffs = coeffs_tensor.cpu().numpy()
             case _:  # This should never happen
                 raise RuntimeError("Unexpected error in input arguments.")

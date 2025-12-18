@@ -21,7 +21,7 @@ PI = math.pi
 
 class MorletWaveletGroup(nn.Module):
     """Base class for single and multi-scale complex Morlet wavelets (PyTorch nn.Module version).
-    
+
     This version inherits from nn.Module and supports optional learnable parameters.
     """
 
@@ -78,43 +78,43 @@ class MorletWaveletGroup(nn.Module):
           | seconds      | Hz              |
           | milliseconds | kHz             |
           | microseconds | MHz             |
-        
+
         - When using learnable parameters, you can access them via:
           - `model.parameters()` - all learnable parameters
           - `model._center_freqs` - center frequency parameter
           - `model._shape_ratios` - shape ratio parameter
         """
         super().__init__()
-        
-        self.device = device if device is not None else torch.device('cpu')
+
+        self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
         self.duration = duration
         self.sampling_freq = sampling_freq
-        
+
         # Convert inputs to tensors
         if isinstance(center_freqs, (int, float)):
             center_freqs = [center_freqs]
         if isinstance(shape_ratios, (int, float)):
             shape_ratios = [shape_ratios]
-            
+
         center_freqs_tensor = torch.atleast_1d(
             torch.as_tensor(center_freqs, dtype=dtype, device=self.device)
         )
         shape_ratios_tensor = torch.atleast_1d(
             torch.as_tensor(shape_ratios, dtype=dtype, device=self.device)
         )
-        
+
         # Register as parameters or buffers
         if learnable_center_freqs:
             self._center_freqs = nn.Parameter(center_freqs_tensor)
         else:
-            self.register_buffer('_center_freqs', center_freqs_tensor)
-            
+            self.register_buffer("_center_freqs", center_freqs_tensor)
+
         if learnable_shape_ratios:
             self._shape_ratios = nn.Parameter(shape_ratios_tensor)
         else:
-            self.register_buffer('_shape_ratios', shape_ratios_tensor)
-        
+            self.register_buffer("_shape_ratios", shape_ratios_tensor)
+
         self._check_center_freqs()
         self._check_shape_ratios()
 
@@ -179,7 +179,10 @@ class MorletWaveletGroup(nn.Module):
     @property
     def times(self) -> torch.Tensor:
         """Time samples of the wavelets."""
-        return torch.arange(self.n_t, dtype=self.dtype, device=self.device) * self.delta_t - 0.5 * self.duration
+        return (
+            torch.arange(self.n_t, dtype=self.dtype, device=self.device) * self.delta_t
+            - 0.5 * self.duration
+        )
 
     @property
     def time_widths(self) -> torch.Tensor:
@@ -226,11 +229,11 @@ class MorletWaveletGroup(nn.Module):
         """
         # Compute Gaussian envelope
         time_ratio = self.times / self.time_widths[:, None]
-        gaussian = torch.exp(-4.0 * Ln2 * time_ratio ** 2)
-        
+        gaussian = torch.exp(-4.0 * Ln2 * time_ratio**2)
+
         # Compute oscillation
         oscillation = torch.exp(1j * 2.0 * PI * self.center_freqs[:, None] * self.times)
-        
+
         return gaussian * oscillation
 
     @property
@@ -246,7 +249,7 @@ class MorletWaveletGroup(nn.Module):
         mode: Literal["power", "magnitude", "complex"] = "power",
     ) -> torch.Tensor:
         """Compute the wavelet transform of the input signal(s).
-        
+
         This is the forward pass for nn.Module compatibility.
 
         Parameters
@@ -348,7 +351,9 @@ class MorletWaveletGroup(nn.Module):
             data = data * window
 
         wt_coeffs = _cwt_via_fft(data, self.waveforms, hermitian=True)
-        wt_coeffs = wt_coeffs / torch.sqrt(self.scales[:, None])  # Normalize by the scales
+        wt_coeffs = wt_coeffs / torch.sqrt(
+            self.scales[:, None]
+        )  # Normalize by the scales
 
         if mode == "power":
             wt_coeffs = torch.square(torch.abs(wt_coeffs))
@@ -387,8 +392,10 @@ class MorletWaveletGroup(nn.Module):
         n_fft = max(n_fft, self.n_t)
 
         # Compute frequency points
-        rfreqs = torch.fft.rfftfreq(n=n_fft, d=self.delta_t, device=self.device, dtype=self.dtype)
-        
+        rfreqs = torch.fft.rfftfreq(
+            n=n_fft, d=self.delta_t, device=self.device, dtype=self.dtype
+        )
+
         # Compute responses
         phase_diffs = 2.0 * PI * (rfreqs - self.center_freqs[:, None])
         resps = torch.exp(
@@ -434,7 +441,7 @@ class MorletWaveletGroup(nn.Module):
             Matplotlib axes displaying the frequency responses.
         """
         freqs, resps = self.magnitude_responses(normalize=normalize, n_fft=n_fft)
-        
+
         # Convert to numpy for plotting
         freqs_np = freqs.detach().cpu().numpy()
         resps_np = resps.detach().cpu().numpy()
@@ -486,7 +493,7 @@ class MorletWaveletGroup(nn.Module):
         from plotly import graph_objects as go
 
         freqs, resps = self.magnitude_responses(normalize=normalize, n_fft=n_fft)
-        
+
         # Convert to numpy for plotting
         freqs_np = freqs.detach().cpu().numpy()
         resps_np = resps.detach().cpu().numpy()
@@ -619,7 +626,7 @@ class MorletWavelet(MorletWaveletGroup):
         mode: Literal["power", "magnitude", "complex"] = "power",
     ) -> torch.Tensor:
         """Compute the wavelet transform of the input signal.
-        
+
         This is the forward pass for nn.Module compatibility.
 
         Parameters
@@ -714,7 +721,7 @@ class MorletWavelet(MorletWaveletGroup):
             if learnable_sr:
                 learnable_parts.append("K")
             learnable_str = f", learnable=[{','.join(learnable_parts)}]"
-        
+
         return (
             f"ComplexMorletWavelet(Fc={self.center_freq}, K={self.shape_ratio},"
             f" Fs={self.sampling_freq:.6f}, T={self.duration}, device={self.device}{learnable_str})"
@@ -816,7 +823,7 @@ class MorletFilterBank(MorletWaveletGroup):
             if learnable_sr:
                 learnable_parts.append("K")
             learnable_str = f", learnable=[{','.join(learnable_parts)}]"
-        
+
         return (
             f"ComplexMorletFilterBank(J={self.n_octaves}, Q={self.n_intervals},"
             f" K={self.shape_ratio}, Fs={self.sampling_freq:.6f}, T={self.duration},"
@@ -979,9 +986,7 @@ class MorletFilterBank(MorletWaveletGroup):
                         f"shape {coeffs.shape}."
                     )
             case (d, None) if d is not None:
-                coeffs_tensor = self.transform(
-                    d, demean, tukey_alpha, mode
-                )
+                coeffs_tensor = self.transform(d, demean, tukey_alpha, mode)
                 coeffs = coeffs_tensor.detach().cpu().numpy()
             case _:  # This should never happen
                 raise RuntimeError("Unexpected error in input arguments.")

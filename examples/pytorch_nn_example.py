@@ -86,20 +86,20 @@ def example_learnable_parameters():
     print("\nOptimizing center frequency...")
     for epoch in range(100):
         optimizer.zero_grad()
-        
+
         # Compute wavelet transform
         coeffs = wavelet(target_signal, mode='complex')
-        
+
         # Loss: maximize correlation with target
         # (minimize negative correlation)
         correlation = torch.abs(torch.sum(coeffs * torch.conj(torch.from_numpy(target_signal.numpy()))))
         loss = -correlation
-        
+
         loss.backward()
         optimizer.step()
-        
+
         losses.append(loss.item())
-        
+
         if (epoch + 1) % 20 == 0:
             current_freq = wavelet._center_freqs.item()
             print(f"Epoch {epoch+1:3d}: Fc = {current_freq:.4f} Hz, Loss = {loss.item():.4f}")
@@ -113,20 +113,20 @@ def example_learnable_parameters():
 
     # Plot optimization progress
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    
+
     axes[0].plot(losses)
     axes[0].set_xlabel('Epoch')
     axes[0].set_ylabel('Loss')
     axes[0].set_title('Optimization Progress')
     axes[0].grid(True)
-    
+
     axes[1].plot(t.numpy(), target_signal.numpy(), label='Target Signal (10 Hz)')
     axes[1].set_xlabel('Time [s]')
     axes[1].set_ylabel('Amplitude')
     axes[1].set_title('Target Signal')
     axes[1].legend()
     axes[1].grid(True)
-    
+
     plt.tight_layout()
     plt.savefig('pytorch_nn_learnable.png', dpi=150)
     print("Saved plot to: pytorch_nn_learnable.png\n")
@@ -177,10 +177,10 @@ def example_wavelet_layer_in_network():
 
     class WaveletClassifier(nn.Module):
         """Simple classifier using wavelet features."""
-        
+
         def __init__(self, n_freqs: int, n_times: int, n_classes: int):
             super().__init__()
-            
+
             # Wavelet transform layer (fixed parameters)
             self.wavelet_layer = MorletWaveletGroup(
                 center_freqs=[5.0, 10.0, 15.0, 20.0],
@@ -189,7 +189,7 @@ def example_wavelet_layer_in_network():
                 sampling_freq=100.0,
                 device='cpu',
             )
-            
+
             # Classification layers
             self.classifier = nn.Sequential(
                 nn.Flatten(),
@@ -198,7 +198,7 @@ def example_wavelet_layer_in_network():
                 nn.Dropout(0.2),
                 nn.Linear(64, n_classes),
             )
-        
+
         def forward(self, x):
             # x: (batch, time)
             # Compute wavelet transform
@@ -228,10 +228,10 @@ def example_end_to_end_optimization():
 
     class AdaptiveWaveletClassifier(nn.Module):
         """Classifier with learnable wavelet parameters."""
-        
+
         def __init__(self):
             super().__init__()
-            
+
             # Learnable wavelet layer
             self.wavelet_layer = MorletWaveletGroup(
                 center_freqs=[5.0, 10.0, 15.0, 20.0],
@@ -241,7 +241,7 @@ def example_end_to_end_optimization():
                 device='cpu',
                 learnable_center_freqs=True,  # Learn optimal frequencies!
             )
-            
+
             # Classifier
             self.classifier = nn.Sequential(
                 nn.Flatten(),
@@ -249,7 +249,7 @@ def example_end_to_end_optimization():
                 nn.ReLU(),
                 nn.Linear(32, 2),
             )
-        
+
         def forward(self, x):
             wt = self.wavelet_layer(x, mode='power')
             return self.classifier(wt)
@@ -289,7 +289,7 @@ def example_end_to_end_optimization():
         loss = criterion(outputs, y_train)
         loss.backward()
         optimizer.step()
-        
+
         if (epoch + 1) % 10 == 0:
             with torch.no_grad():
                 preds = outputs.argmax(dim=1)
@@ -313,12 +313,12 @@ def example_device_management():
     if torch.cuda.is_available():
         wavelet = wavelet.cuda()
         print(f"After .cuda(): {wavelet.device}")
-        
+
         # Process GPU data
         signal_gpu = torch.randn(100, device='cuda')
         coeffs_gpu = wavelet(signal_gpu)
         print(f"Output device: {coeffs_gpu.device}")
-        
+
         # Move back to CPU
         wavelet = wavelet.cpu()
         print(f"After .cpu(): {wavelet.device}")
@@ -328,7 +328,7 @@ def example_device_management():
     # .to() method
     wavelet = wavelet.to('cpu')
     print(f"After .to('cpu'): {wavelet.device}")
-    
+
     # Change dtype
     wavelet = wavelet.to(dtype=torch.float32)
     print(f"After .to(float32): {wavelet.dtype}\n")

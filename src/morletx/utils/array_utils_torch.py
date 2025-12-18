@@ -1,11 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import torch
-
-if TYPE_CHECKING:
-    pass
 
 
 def get_centered_array(arr: torch.Tensor, new_shape: tuple[int, ...]) -> torch.Tensor:
@@ -29,11 +24,15 @@ def get_centered_array(arr: torch.Tensor, new_shape: tuple[int, ...]) -> torch.T
     current_shape = torch.tensor(arr.shape)
     start_idx = (current_shape - new_shape_arr) // 2
     end_idx = start_idx + new_shape_arr
-    slice_idxs = [slice(int(start_idx[k]), int(end_idx[k])) for k in range(len(end_idx))]
+    slice_idxs = [
+        slice(int(start_idx[k]), int(end_idx[k])) for k in range(len(end_idx))
+    ]
     return arr[tuple(slice_idxs)]
 
 
-def tukey_window(window_length: int, alpha: float = 0.5, device: torch.device | str | None = None) -> torch.Tensor:
+def tukey_window(
+    window_length: int, alpha: float = 0.5, device: torch.device | str | None = None
+) -> torch.Tensor:
     """Return a Tukey window (tapered cosine window).
 
     Parameters
@@ -66,11 +65,18 @@ def tukey_window(window_length: int, alpha: float = 0.5, device: torch.device | 
     w = torch.ones(window_length, device=device, dtype=torch.float64)
 
     # Taper the first width samples
-    n1 = n[:width + 1]
-    w[:width + 1] = 0.5 * (1 + torch.cos(torch.pi * (-1 + 2.0 * n1 / alpha / (window_length - 1))))
+    n1 = n[: width + 1]
+    w[: width + 1] = 0.5 * (
+        1 + torch.cos(torch.pi * (-1 + 2.0 * n1 / alpha / (window_length - 1)))
+    )
 
     # Taper the last width samples
-    n2 = n[window_length - width - 1:]
-    w[window_length - width - 1:] = 0.5 * (1 + torch.cos(torch.pi * (-2.0 / alpha + 1 + 2.0 * n2 / alpha / (window_length - 1))))
+    n2 = n[window_length - width - 1 :]
+    w[window_length - width - 1 :] = 0.5 * (
+        1
+        + torch.cos(
+            torch.pi * (-2.0 / alpha + 1 + 2.0 * n2 / alpha / (window_length - 1))
+        )
+    )
 
     return w

@@ -8,13 +8,14 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**❗ Note this project is still in early development.**
+> [!NOTE]
+> *This project is still in early development.*
 
 ## Overview
 
 This Python library provides an implementation of the Morlet wavelet transform, a powerful time-frequency analysis method that offers an intuitive approach to understanding signal characteristics. The implementation is inspired by the pioneering work of [French geophysicist Jean Morlet](https://en.wikipedia.org/wiki/Jean_Morlet), leveraging his original, highly intuitive formulation which laid the foundation for the Continuous Wavelet Transform (CWT).
 
-Unlike more abstract modern formulations of the CWT, Jean Morlet's method is deeply rooted in physical intuition, making it particularly accessible for comprehending how signals vary in frequency over time.
+Unlike more abstract rn formulations of the CWT, Jean Morlet's method is deeply rooted in physical intuition, making it particularly accessible for comprehending how signals vary in frequency over time.
 
 ## Features
 
@@ -49,21 +50,20 @@ import numpy as np
 
 from morletx.core import MorletFilterBank
 
->>> data = ... # some signal data
->>> fs = ...   # sampling frequency of the signal
+data = ... # some signal data
+fs = ...   # sampling frequency of the signal
 
->>> filter_bank = MorletFilterBank(
-...     n_octaves=8,          # Number of octaves to cover
-...     n_intervals=4,        # Number of intervals (filters) per octave
-...     shape_ratio=5,        # Shape ratio of the Morlet wavelet
-...     duration=2.0,         # Duration of the Morlet wavelet
-...     sampling_freq=fs,     # Sampling frequency of the signal
-...     array_engine="cupy",  # Choices: "numpy" or "cupy"
-... )
+filter_bank = MorletFilterBank(
+    n_octaves=8,          # Number of octaves to cover
+    n_intervals=4,        # Number of intervals (filters) per octave
+    shape_ratio=5,        # Shape ratio of the Morlet wavelet
+    duration=2.0,         # Duration of the Morlet wavelet
+    sampling_freq=fs,     # Sampling frequency of the signal
+    array_engine="cupy",  # Choices: "numpy" or "cupy"
+)
 
->>> mode = "magnitude"        # Choices: "magnitude", "power", "complex"
-
->>> scalogram = filter_bank.transform(data, mode=mode, detach_from_device=True)
+mode = "magnitude"        # Choices: "magnitude", "power", "complex"
+scalogram = filter_bank.transform(data, mode=mode, detach_from_device=True)
 ```
 
 ### Switching between CPU and GPU
@@ -73,13 +73,13 @@ Switching between CPU and GPU computation is as simple as changing the `array_en
 - For CPU computation (and storing the results as NumPy arrays):
 
     ```python
-    >>> filter_bank = MorletFilterBank(..., array_engine="numpy")
+    filter_bank = MorletFilterBank(..., array_engine="numpy")
     ```
 
 - For GPU computation (and storing the results as CuPy arrays):
 
     ```python
-    >>> filter_bank = MorletFilterBank(..., array_engine="cupy")
+    filter_bank = MorletFilterBank(..., array_engine="cupy")
     ```
 
 ### Use CuPy for computation but get results as NumPy array
@@ -87,8 +87,8 @@ Switching between CPU and GPU computation is as simple as changing the `array_en
 When using GPU for computation, the results will be returned as so-called "device arrays". To move the results to the host (CPU) memory, use the `detach_from_device` parameter:
 
 ```python
->>> filter_bank = MorletFilterBank(..., array_engine="cupy")
->>> scalogram_as_numpy = filter_bank.transform(..., detach_from_device=True)
+filter_bank = MorletFilterBank(..., array_engine="cupy")
+scalogram_as_numpy = filter_bank.transform(..., detach_from_device=True)
 ```
 
 By default, the `detach_from_device` parameter is set to `False`, meaning the results will be stored as device arrays when using GPU for computation (note that it has no effect on CPU computation).
@@ -102,11 +102,11 @@ The only requirement is that the tensor must be already on GPU before exchanging
 PyTorch supports zero-copy data exchange through `DLPack`, so you can get the results as a PyTorch tensor as follows:
 
 ```python
->>> import torch
+import torch
 
->>> filter_bank = MorletFilterBank(..., array_engine="cupy")
->>> scalogram_as_cupy = filter_bank.transform(..., detach_from_device=False)
->>> scalogram_as_torch = torch.from_dlpack(scalogram_as_cupy)
+filter_bank = MorletFilterBank(..., array_engine="cupy")
+scalogram_as_cupy = filter_bank.transform(..., detach_from_device=False)
+scalogram_as_torch = torch.from_dlpack(scalogram_as_cupy)
 ```
 
 ### Visualisation
@@ -116,17 +116,17 @@ There are quick-and-ready methods to visualise both the filter bank and the comp
 - To visualise the scalogram:
 
 ```python
->>> import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
->>> fig_sgram, ax_sgram = plt.subplots()
->>> filter_bank.plot_scalogram(ax=ax_sgram, scalogram=scalogram, mode=mode)
+fig_sgram, ax_sgram = plt.subplots()
+filter_bank.plot_scalogram(ax=ax_sgram, scalogram=scalogram, =)
 ```
 
 - To visualise the frequency responses of the filter bank:
 
 ```python
->>> fig_fbank, ax_fbank = plt.subplots()
->>> filter_bank.plot_responses(ax=ax_fbank, n_fft=512)
+fig_fbank, ax_fbank = plt.subplots()
+filter_bank.plot_responses(ax=ax_fbank, n_fft=512)
 ```
 
 Here is an example of the computed scalogram for a signal with a sampling frequency of 16 kHz:
@@ -154,7 +154,8 @@ Here is an example of the computed scalogram for a signal with a sampling freque
 
 A significant innovation introduced by Morlet is the **shape ratio**, $\kappa$. This parameter defines the Gaussian time width at half-amplitude as an integer multiple of the wavelet's dominant period ($\Delta t = \kappa T_0$). This allows for the preservation of the wavelet's shape as its dominant period changes, providing a consistent analysis across frequencies.
 
-❗ This section will be expanded and detailed in the future.
+> [!NOTE]
+> This section will be expanded and detailed in the future.
 
 ## Examples
 
@@ -165,6 +166,6 @@ A significant innovation introduced by Morlet is the **shape ratio**, $\kappa$. 
 
 Report any issues or bugs on [GitHub Issues](https://github.com/nimanzik/MorletX/issues).
 
-## Contact
+## License
 
-- Nima Nooshiri – [nima.nooshiri@gmail.com](mailto:nima.nooshiri@gmail.com)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

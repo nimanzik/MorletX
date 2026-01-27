@@ -15,7 +15,7 @@
 
 This Python library provides an implementation of the Morlet wavelet transform, a powerful time-frequency analysis method that offers an intuitive approach to understanding signal characteristics. The implementation is inspired by the pioneering work of [French geophysicist Jean Morlet](https://en.wikipedia.org/wiki/Jean_Morlet), leveraging his original, highly intuitive formulation which laid the foundation for the Continuous Wavelet Transform (CWT).
 
-Unlike more abstract rn formulations of the CWT, Jean Morlet's method is deeply rooted in physical intuition, making it particularly accessible for comprehending how signals vary in frequency over time.
+Unlike more abstract modern formulations of the CWT, Jean Morlet's method is deeply rooted in physical intuition, making it particularly accessible for comprehending how signals vary in frequency over time.
 
 ## Features
 

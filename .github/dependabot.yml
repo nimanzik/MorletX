@@ -12,7 +12,7 @@ updates:
       interval: "monthly"
 
   # Update GitHub Actions workflows
-  - package-ecosystem: "uv" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "github-actions" # See documentation for possible values
+    directory: "/" # Location of workflow files
     schedule:
       interval: "monthly"

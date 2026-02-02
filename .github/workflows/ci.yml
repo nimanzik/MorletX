@@ -6,8 +6,24 @@ on:
   push:
     branches: [ main ]
 
+env:
+  UV_VERSION: "0.9"
+  BOTS_GUARD: &bots_guard >-
+    !(
+      github.event_name == 'pull_request' &&
+      (
+        github.event.pull_request.user.login == 'dependabot[bot]' ||
+        github.event.pull_request.user.login == 'dependabot' ||
+        github.event.pull_request.user.login == 'pre-commit-ci[bot]' ||
+        github.event.pull_request.user.login == 'pre-commit-ci' ||
+        github.event.pull_request.user.login == 'mend-bolt-for-github[bot]' ||
+        github.event.pull_request.user.login == 'mend-bolt-for-github'
+      )
+    )
+
 jobs:
   lint-format:
+    if: *bots_guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,7 +31,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.8"
+          version: ${{ env.UV_VERSION }}
           enable-cache: true
 
       - name: Set up Python
@@ -34,6 +50,7 @@ jobs:
           uvx ruff format --check src/
 
   type-check:
+    if: *bots_guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +58,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.8"
+          version: ${{ env.UV_VERSION }}
           enable-cache: true
 
       - name: Set up Python
@@ -58,6 +75,7 @@ jobs:
           uv run ty check src/
 
   test:
+    if: *bots_guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +83,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.8"
+          version: ${{ env.UV_VERSION }}
           enable-cache: true
 
       - name: Set up Python

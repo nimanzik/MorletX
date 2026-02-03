@@ -2,28 +2,20 @@ name: CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   UV_VERSION: "0.9"
-  BOTS_GUARD: &bots_guard >-
-    !(
-      github.event_name == 'pull_request' &&
-      (
-        github.event.pull_request.user.login == 'dependabot[bot]' ||
-        github.event.pull_request.user.login == 'dependabot' ||
-        github.event.pull_request.user.login == 'pre-commit-ci[bot]' ||
-        github.event.pull_request.user.login == 'pre-commit-ci' ||
-        github.event.pull_request.user.login == 'mend-bolt-for-github[bot]' ||
-        github.event.pull_request.user.login == 'mend-bolt-for-github'
-      )
-    )
 
 jobs:
+  bots_guard:
+    uses: ./.github/workflows/_bots_guard.yml
+
   lint-format:
-    if: *bots_guard
+    needs: bots_guard
+    if: needs.bots_guard.outputs.is_bot_pr == 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +42,8 @@ jobs:
           uvx ruff format --check src/
 
   type-check:
-    if: *bots_guard
+    needs: bots_guard
+    if: needs.bots_guard.outputs.is_bot_pr == 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -75,7 +68,8 @@ jobs:
           uv run ty check src/
 
   test:
-    if: *bots_guard
+    needs: bots_guard
+    if: needs.bots_guard.outputs.is_bot_pr == 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

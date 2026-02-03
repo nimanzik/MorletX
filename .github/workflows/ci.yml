@@ -15,7 +15,7 @@ jobs:
 
   lint-format:
     needs: bots_guard
-    if: needs.bots_guard.outputs.is_bot_pr == 'false'
+    if: needs.bots_guard.outputs.skip_ci == 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
 
   type-check:
     needs: bots_guard
-    if: needs.bots_guard.outputs.is_bot_pr == 'false'
+    if: needs.bots_guard.outputs.skip_ci == 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,7 +69,7 @@ jobs:
 
   test:
     needs: bots_guard
-    if: needs.bots_guard.outputs.is_bot_pr == 'false'
+    if: needs.bots_guard.outputs.skip_ci == 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

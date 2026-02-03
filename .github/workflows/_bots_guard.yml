@@ -1,19 +1,22 @@
-name: Guard CI pipeline when PR is from bot accounts
+name: Guard CI when PR is from bot accounts
 
 on:
   workflow_call:
+    outputs:
+      is_bot_pr:
+        description: "Indicates if the PR is created by a bot account"
+        value: ${{ jobs.guard.outputs.result }}
 
 jobs:
   guard:
     runs-on: ubuntu-latest
-    outputs:
-      is_bot_pr: ${{ steps.check_bot_pr.outputs.is_bot_pr }}
     steps:
-      - name: Determine if PR is from a bot account
-        id: check_bot_pr
+      - id: check
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             PR_USER="${{ github.event.pull_request.user.login }}"
+            echo "| DEBUG | PR created by: $PR_USER"
+
             if [[ "$PR_USER" == "dependabot[bot]" || "$PR_USER" == "dependabot" || \
                   "$PR_USER" == "pre-commit-ci[bot]" || "$PR_USER" == "pre-commit-ci" || \
                   "$PR_USER" == "mend-bolt-for-github[bot]" || "$PR_USER" == "mend-bolt-for-github" ]]; then
@@ -24,3 +27,5 @@ jobs:
           else
             echo "is_bot_pr=false" >> $GITHUB_OUTPUT
           fi
+    outputs:
+      result: ${{ steps.check.outputs.is_bot_pr }}

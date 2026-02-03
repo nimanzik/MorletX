@@ -729,7 +729,7 @@ class MorletFilterBank(MorletWaveletGroup):
         -------
         fig: PlotlyFigure
         """
-        fig = super().plot_responses_plotly(
+        fig = super()._plot_responses_plotly(
             fig=fig,
             normalize=normalize,
             auto_xlabel=auto_xlabel,

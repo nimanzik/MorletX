@@ -1,4 +1,4 @@
-name: Dependabot manual sweep
+name: Dependabot Manual Sweep
 
 on:
   # Trigger: it won't run unless we click the button
@@ -12,12 +12,22 @@ jobs:
   sweep:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Enable Auto-Merge for all open Dependabot PRs
         run: |
-          # 1. List all open PRs by dependabot
-          # 2. Extract their URLs
-          # 3. Enable auto-merge for each one
-          gh pr list --author "dependabot[bot]" --state open --json url --jq '.[].url' | \
-          xargs -I {} gh pr merge --auto --squash "{}"
+          echo "Fetching open Dependabot PRs..."
+
+          # Get the list of URLs
+          PR_URLS=$(gh pr list --author "dependabot[bot]" --state open --json url --jq '.[].url')
+
+          if [ -z "$PR_URLS" ]; then
+            echo "No open Dependabot PRs found. Nothing to do!"
+            exit 0
+          fi
+
+          echo "Found PRs. Enabling auto-merge..."
+          echo "$PR_URLS" | xargs -I {} gh pr merge --auto --squash "{}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

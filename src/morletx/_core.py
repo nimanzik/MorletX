@@ -361,7 +361,7 @@ class MorletWaveletGroup:
             ax.set_title("Wavelets Frequency Responses")
         return ax
 
-    def plot_responses_plotly(
+    def _plot_responses_plotly(
         self,
         fig: PlotlyFigure,
         normalize: bool = True,
@@ -729,7 +729,7 @@ class MorletFilterBank(MorletWaveletGroup):
         -------
         fig: PlotlyFigure
         """
-        fig = super().plot_responses_plotly(
+        fig = super()._plot_responses_plotly(
             fig=fig,
             normalize=normalize,
             auto_xlabel=auto_xlabel,

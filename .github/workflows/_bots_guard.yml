@@ -1,0 +1,30 @@
+name: Guard CI against bot pushes to main
+
+on:
+  workflow_call:
+    outputs:
+      skip_ci:
+        description: "Determine if the CI should be skipped when a bot pushes to main"
+        value: ${{ jobs.guard.outputs.result }}
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - id: check
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOT_USERS=("dependabot[bot]" "renovate[bot]" "pre-commit-ci[bot]" "mend-bolt-for-github[bot]" "github-actions[bot]")
+          ACTOR="${{ github.actor }}"
+          EVENT_NAME="${{ github.event_name }}"
+          SKIP_CI="false"
+          for BOT_USER in "${BOT_USERS[@]}"; do
+            if [[ "$ACTOR" == "$BOT_USER" && "$EVENT_NAME" == "push" ]]; then
+              SKIP_CI="true"
+              break
+            fi
+          done
+          echo "skip_ci=$SKIP_CI" >> $GITHUB_OUTPUT
+    outputs:
+      result: ${{ steps.check.outputs.skip_ci }}

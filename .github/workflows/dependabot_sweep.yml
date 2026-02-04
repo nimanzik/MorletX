@@ -1,0 +1,23 @@
+name: Dependabot manual sweep
+
+on:
+  # Trigger: it won't run unless we click the button
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable Auto-Merge for all open Dependabot PRs
+        run: |
+          # 1. List all open PRs by dependabot
+          # 2. Extract their URLs
+          # 3. Enable auto-merge for each one
+          gh pr list --author "dependabot[bot]" --state open --json url --jq '.[].url' | \
+          xargs -I {} gh pr merge --auto --squash "{}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

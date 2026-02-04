@@ -2,7 +2,7 @@ name: Dependabot Manual Sweep
 
 on:
   # Trigger: it won't run unless we click the button
-  workflow_dispatch: 
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,7 +18,7 @@ jobs:
       - name: Enable Auto-Merge for all open Dependabot PRs
         run: |
           echo "Fetching open Dependabot PRs..."
-          
+
           # Get the list of URLs
           PR_URLS=$(gh pr list --author "dependabot[bot]" --state open --json url --jq '.[].url')
 

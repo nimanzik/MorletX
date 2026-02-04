@@ -70,7 +70,7 @@ def get_signal_module(array_engine: Literal["numpy", "cupy"]) -> Any:
 
 
 def get_centered_array(arr: NDArray, new_shape: tuple[int, ...]) -> NDArray:
-    """Return the center newshape portion of an array.
+    """Return the centered array with the new shape.
 
     Adapted from: https://github.com/scipy/scipy/blob/main/scipy/signal/_signaltools.py#L411
 
@@ -86,9 +86,9 @@ def get_centered_array(arr: NDArray, new_shape: tuple[int, ...]) -> NDArray:
     centered_arr : ndarray
         Centered array with the new shape.
     """
-    new_shape = np.asarray(new_shape)
+    output_shape = np.asarray(new_shape)
     current_shape = np.array(arr.shape)
-    start_idx = (current_shape - new_shape) // 2
-    end_idx = start_idx + new_shape
+    start_idx = (current_shape - output_shape) // 2
+    end_idx = start_idx + output_shape
     slice_idxs = [slice(start_idx[k], end_idx[k]) for k in range(len(end_idx))]
     return arr[tuple(slice_idxs)]

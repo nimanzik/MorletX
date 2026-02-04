@@ -7,6 +7,7 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/nimanzik/MorletX/actions/workflows/ci.yml/badge.svg)](https://github.com/nimanzik/MorletX/actions/workflows/ci.yml)
 
 > [!NOTE]
 > *This project is still in early development.*

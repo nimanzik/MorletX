@@ -3,7 +3,7 @@ name: Dependabot PR auto-merge
 on:
   pull_request:
     types: [opened, reopened, synchronize]
-  workflow_dispatch: 
+  workflow_dispatch:
 
 permissions:
   contents: write

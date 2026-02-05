@@ -10,7 +10,7 @@
 [![CI](https://github.com/nimanzik/MorletX/actions/workflows/ci.yml/badge.svg)](https://github.com/nimanzik/MorletX/actions/workflows/ci.yml)
 
 > [!CAUTION]
-> *This project is still under active development and may undergo significant changes.*
+> This project is still under active development and may undergo significant changes.
 
 ## Overview
 

@@ -9,8 +9,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/nimanzik/MorletX/actions/workflows/ci.yml/badge.svg)](https://github.com/nimanzik/MorletX/actions/workflows/ci.yml)
 
-> [!NOTE]
-> *This project is still in early development.*
+> [!CAUTION]
+> *This project is still under active development and may undergo significant changes.*
 
 ## Overview
 
